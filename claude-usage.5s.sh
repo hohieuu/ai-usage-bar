@@ -8,8 +8,6 @@
 # <swiftbar.hideSwiftBar>false</swiftbar.hideSwiftBar>
 # <swiftbar.title>Claude Usage</swiftbar.title>
 
-RTK_DB="$HOME/Library/Application Support/rtk/history.db"
-
 # ── Theme: always dark ─────────────────────────────────────────────────────
 C_GOOD="#00cc44";  C_WARN="#ffaa00";  C_BAD="#ff4444"
 C_DIM="#aaaaaa";   C_INFO="#6699ff";  C_FG="#ffffff"
@@ -119,22 +117,6 @@ print(f'{pct:.1f}')
 " 2>/dev/null)
 fi
 
-# ── RTK today's savings ────────────────────────────────────────────────────
-TODAY=$(date +%Y-%m-%d)
-if [ -f "$RTK_DB" ] && command -v sqlite3 &>/dev/null; then
-  _row=$(sqlite3 "$RTK_DB" \
-    "SELECT COUNT(*),COALESCE(SUM(saved_tokens),0),COALESCE(SUM(input_tokens),0)
-     FROM commands WHERE substr(timestamp,1,10)='$TODAY';" 2>/dev/null)
-  IFS='|' read -r RTK_CMDS RTK_SAVED RTK_IN <<< "$_row"
-  if [ "${RTK_IN:-0}" -gt 0 ] 2>/dev/null; then
-    RTK_PCT=$(python3 -c "print(f'{${RTK_SAVED:-0}/(${RTK_SAVED:-0}+${RTK_IN:-0})*100:.0f}')" 2>/dev/null)
-  else
-    RTK_PCT=0
-  fi
-else
-  RTK_CMDS=0; RTK_SAVED=0; RTK_PCT=0
-fi
-
 # ── Pick bar color based on usage ─────────────────────────────────────────
 if [ -n "$FIVE_PCT" ]; then
   FIVE_INT=$(python3 -c "print(int(float('$FIVE_PCT')))" 2>/dev/null)
@@ -208,11 +190,5 @@ if [ -n "$CTX_PCT" ]; then
   echo "  Ctx $(make_bar "$CTX_PCT") | font=Menlo size=12 color=$C_DIM,$C_DIM"
 fi
 
-echo "---"
-
-# ── RTK savings ────────────────────────────────────────────────────────────
-echo "RTK Today | font=Menlo-Bold size=12 color=$C_WARN,$C_WARN"
-echo "  Cmds   $RTK_CMDS | font=Menlo size=12 color=$C_WARN,$C_WARN"
-echo "  Saved  $RTK_SAVED tokens ($RTK_PCT%) | font=Menlo size=12 color=$C_WARN,$C_WARN"
 echo "---"
 echo "Refresh | refresh=true font=Menlo size=11 color=$C_DIM,$C_DIM"

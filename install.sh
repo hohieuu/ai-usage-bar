@@ -233,6 +233,3 @@ else
 fi
 
 echo ""
-echo "  Optional: install RTK for token savings:"
-echo "  → https://github.com/rtk-ai/rtk"
-echo ""
