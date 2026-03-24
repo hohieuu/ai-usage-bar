@@ -28,7 +28,19 @@ info "Checking dependencies..."
 command -v python3  &>/dev/null || die "python3 not found. Install via: brew install python3"
 command -v sqlite3  &>/dev/null || die "sqlite3 not found."
 command -v claude   &>/dev/null || die "Claude Code CLI not found. Install from: https://claude.ai/download"
-success "Dependencies OK"
+
+# ── Check: Claude Code version ─────────────────────────────────────────────
+CLAUDE_VERSION=$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+MIN_VERSION="2.1.81"
+version_gte() {
+  printf '%s\n%s' "$2" "$1" | sort -V -C
+}
+if [ -z "$CLAUDE_VERSION" ]; then
+  warn "Could not determine Claude Code version — proceeding anyway."
+elif ! version_gte "$CLAUDE_VERSION" "$MIN_VERSION"; then
+  die "Claude Code $CLAUDE_VERSION is too old. Minimum required: $MIN_VERSION\n  Update with: npm update -g @anthropic-ai/claude-code"
+fi
+success "Dependencies OK (Claude Code $CLAUDE_VERSION)"
 
 # ── Check / install SwiftBar ───────────────────────────────────────────────
 info "Checking SwiftBar..."

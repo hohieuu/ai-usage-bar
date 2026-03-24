@@ -26,7 +26,7 @@ bash cursor-install.sh   # Cursor (zero-config)
 |------|---------|
 | [SwiftBar](https://swiftbar.app) | `brew install --cask swiftbar` |
 | Python 3 | `brew install python3` (or pre-installed) |
-| Claude Code CLI | [claude.ai/download](https://claude.ai/download) (Claude only) |
+| Claude Code CLI **≥ 2.1.81** | [claude.ai/download](https://claude.ai/download) — run `claude --version` to check (Claude only) |
 | Cursor IDE | [cursor.com](https://cursor.com) — must be logged in (Cursor only) |
 
 ---
