@@ -1,9 +1,9 @@
 #!/bin/bash
 # Claude Usage Bar — Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/hohieuu/claude-usage-bar/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install.sh | bash
 set -euo pipefail
 
-REPO_RAW="https://raw.githubusercontent.com/hohieuu/claude-usage-bar/main"
+REPO_RAW="https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main"
 HOOK_PATH="$HOME/.claude/hooks/save-usage-status.sh"
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 

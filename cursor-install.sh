@@ -4,7 +4,7 @@
 # Token auto-extracted from Cursor's local DB — no manual setup needed.
 set -euo pipefail
 
-REPO_RAW="https://raw.githubusercontent.com/hohieuu/claude-usage-bar/main"
+REPO_RAW="https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main"
 CURSOR_DB="$HOME/Library/Application Support/Cursor/User/globalStorage/state.vscdb"
 
 # ── Colors ─────────────────────────────────────────────────────────────────

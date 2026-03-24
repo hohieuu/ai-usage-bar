@@ -2,32 +2,44 @@
 
 Real-time **Claude Code** and **Cursor** usage in your macOS menu bar via [SwiftBar](https://swiftbar.app).
 
-[![Demo](https://img.youtube.com/vi/PDRUsuuMiMY/maxresdefault.jpg)](https://youtu.be/PDRUsuuMiMY)
+[Demo](https://youtu.be/PDRUsuuMiMY)
 
-| Claude Code | Cursor |
-|-------------|--------|
+
+| Claude Code                               | Cursor                                        |
+| ----------------------------------------- | --------------------------------------------- |
 | 5h/7d rate-limit windows, resets every 5s | Monthly premium requests, refreshes every 10m |
+
 
 ---
 
 ## Install
 
-```bash
-git clone https://github.com/hohieuu/claude-usage-bar
-cd claude-usage-bar
+Pick the integration you want.
 
-bash install.sh          # Claude Code
-bash cursor-install.sh   # Cursor (zero-config)
+### Claude Code
+
+**Prerequisites:** [SwiftBar](https://swiftbar.app) (`brew install --cask swiftbar`), Python 3, [Claude Code CLI](https://claude.ai/download) ≥ 2.1.81
+
+```bash
+# One-liner
+curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install.sh | bash
+
+# Or clone
+git clone https://github.com/hohieuu/ai-usage-bar && bash ai-usage-bar/install.sh
 ```
 
-### Prerequisites
+### Cursor
 
-| Tool | Install |
-|------|---------|
-| [SwiftBar](https://swiftbar.app) | `brew install --cask swiftbar` |
-| Python 3 | `brew install python3` (or pre-installed) |
-| Claude Code CLI **≥ 2.1.81** | [claude.ai/download](https://claude.ai/download) — run `claude --version` to check (Claude only) |
-| Cursor IDE | [cursor.com](https://cursor.com) — must be logged in (Cursor only) |
+**Prerequisites:** [SwiftBar](https://swiftbar.app) (`brew install --cask swiftbar`), Python 3, [Cursor IDE](https://cursor.com) (must be logged in)
+
+```bash
+# One-liner
+curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/cursor-install.sh | bash
+
+# Or clone
+git clone https://github.com/hohieuu/ai-usage-bar && bash ai-usage-bar/cursor-install.sh
+```
+
 
 ---
 
@@ -47,7 +59,7 @@ Claude Usage
 **Cursor** — `⌘ 620/1000` in menu bar
 
 ```
-Cursor Usage
+claudeCursor Usage
   Month ██████░░░░ 62%       ← premium requests
   620 / 1000 premium requests
 Billing Cycle
@@ -84,7 +96,10 @@ sequenceDiagram
     end
 ```
 
+
+
 > **What gets installed:**
+>
 > - `~/.claude/hooks/save-usage-status.sh` — 7-line hook, reads stdin → writes to `/tmp/`
 > - `<SwiftBar plugins>/claude-usage.5s.sh` — display script, reads `/tmp/` files only
 > - `~/.claude/settings.json` — adds `statusLine` entry (backed up first)
@@ -112,7 +127,10 @@ sequenceDiagram
     end
 ```
 
+
+
 > **What gets installed:**
+>
 > - `<SwiftBar plugins>/cursor-usage.10m.sh` — single file, reads Cursor's existing DB
 > - `~/.cursor-usage-bar/cache.json` — cached API response (auto-created)
 > - **No config files, no tokens to paste, no hooks** — fully zero-config
@@ -122,6 +140,10 @@ sequenceDiagram
 ## Uninstall
 
 ```bash
-bash uninstall.sh          # Claude Code
-bash cursor-uninstall.sh   # Cursor
+# Claude Code
+curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/uninstall.sh | bash
+
+# Cursor
+curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/cursor-uninstall.sh | bash
 ```
+
