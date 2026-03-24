@@ -2,6 +2,8 @@
 
 Real-time **Claude Code** and **Cursor** usage in your macOS menu bar via [SwiftBar](https://swiftbar.app).
 
+[![Demo](https://img.youtube.com/vi/PDRUsuuMiMY/maxresdefault.jpg)](https://youtu.be/PDRUsuuMiMY)
+
 | Claude Code | Cursor |
 |-------------|--------|
 | 5h/7d rate-limit windows, resets every 5s | Monthly premium requests, refreshes every 10m |
