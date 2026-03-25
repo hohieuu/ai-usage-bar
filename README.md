@@ -37,7 +37,7 @@ git clone https://github.com/hohieuu/ai-usage-bar && bash ai-usage-bar/install/i
 <div style="background-color: #09a3a3; padding: 2px; border-radius: 8px; margin: 16px 0;">
   <div style="background-color: #fff; padding: 16px; border-radius: 6px;">
 
-### 💻 Cursor
+### <img src=".assets/cursor-color.svg" height="24" style="vertical-align: middle; margin-right: 8px;" /> Cursor
 
 **Prerequisites:** [SwiftBar](https://swiftbar.app) • Python 3 • [Cursor IDE](https://cursor.com) (logged in)
 
@@ -185,7 +185,7 @@ curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install/u
 <div style="background-color: #09a3a3; padding: 2px; border-radius: 8px; margin: 16px 0;">
   <div style="background-color: #fff; padding: 16px; border-radius: 6px;">
 
-### 💻 Cursor
+### <img src=".assets/cursor-color.svg" height="24" style="vertical-align: middle; margin-right: 8px;" /> Cursor
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install/cursor-uninstall.sh | bash
