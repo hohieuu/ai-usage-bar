@@ -247,8 +247,8 @@ fi
 echo "Refresh | bash=$PLUGIN_PATH param1=--force terminal=false refresh=true font=Menlo size=11 color=$C_GOOD,$C_GOOD"
 
 # ── Check for update button (gray, shows version) ──────────────────────
-if [ -f "$REPO_DIR/update" ]; then
+if [ -f "$REPO_DIR/install/update" ]; then
   UPDATE_LABEL="Check for Update"
   [ -n "$VERSION" ] && UPDATE_LABEL="Check for Update - $VERSION"
-  echo "$UPDATE_LABEL | bash=$REPO_DIR/update terminal=true font=Menlo size=11 color=$C_DIM,$C_DIM"
+  echo "$UPDATE_LABEL | bash=$REPO_DIR/install/update terminal=true font=Menlo size=11 color=$C_DIM,$C_DIM"
 fi

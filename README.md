@@ -14,29 +14,45 @@ Real-time **Claude Code** and **Cursor** usage in your macOS menu bar via [Swift
 
 ## Install
 
-### Claude Code
+<div style="background-color: #D97757; padding: 2px; border-radius: 8px; margin: 16px 0;">
+  <div style="background-color: #fff; padding: 16px; border-radius: 6px;">
 
-**Prerequisites:** [SwiftBar](https://swiftbar.app) (`brew install --cask swiftbar`), Python 3, `jq` (`brew install jq`), [Claude Code](https://claude.ai/download) — must be logged in (`claude login`)
+### <img src=".assets/claude-color.svg" height="24" style="vertical-align: middle; margin-right: 8px;" /> Claude Code
 
-```bash
-# One-liner
-curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install.sh | bash
-
-# Or clone
-git clone https://github.com/hohieuu/ai-usage-bar && bash ai-usage-bar/install.sh
-```
-
-### Cursor
-
-**Prerequisites:** [SwiftBar](https://swiftbar.app) (`brew install --cask swiftbar`), Python 3, [Cursor IDE](https://cursor.com) (must be logged in)
+**Prerequisites:** [SwiftBar](https://swiftbar.app) • Python 3 • `jq` • [Claude Code](https://claude.ai/download) (logged in)
 
 ```bash
-# One-liner
-curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/cursor-install.sh | bash
-
-# Or clone
-git clone https://github.com/hohieuu/ai-usage-bar && bash ai-usage-bar/cursor-install.sh
+curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install/install.sh | bash
 ```
+
+or
+
+```bash
+git clone https://github.com/hohieuu/ai-usage-bar && bash ai-usage-bar/install/install.sh
+```
+
+  </div>
+</div>
+
+<div style="background-color: #09a3a3; padding: 2px; border-radius: 8px; margin: 16px 0;">
+  <div style="background-color: #fff; padding: 16px; border-radius: 6px;">
+
+### 💻 Cursor
+
+**Prerequisites:** [SwiftBar](https://swiftbar.app) • Python 3 • [Cursor IDE](https://cursor.com) (logged in)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install/cursor-install.sh | bash
+```
+
+or
+
+```bash
+git clone https://github.com/hohieuu/ai-usage-bar && bash ai-usage-bar/install/cursor-install.sh
+```
+
+  </div>
+</div>
 
 
 ---
@@ -154,10 +170,26 @@ sequenceDiagram
 
 ## Uninstall
 
-```bash
-# Claude Code
-curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/uninstall.sh | bash
+<div style="background-color: #D97757; padding: 2px; border-radius: 8px; margin: 16px 0;">
+  <div style="background-color: #fff; padding: 16px; border-radius: 6px;">
 
-# Cursor
-curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/cursor-uninstall.sh | bash
+### <img src=".assets/claude-color.svg" height="24" style="vertical-align: middle; margin-right: 8px;" /> Claude Code
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install/uninstall.sh | bash
 ```
+
+  </div>
+</div>
+
+<div style="background-color: #09a3a3; padding: 2px; border-radius: 8px; margin: 16px 0;">
+  <div style="background-color: #fff; padding: 16px; border-radius: 6px;">
+
+### 💻 Cursor
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install/cursor-uninstall.sh | bash
+```
+
+  </div>
+</div>
