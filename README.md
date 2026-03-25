@@ -72,7 +72,7 @@ Claude Usage
   Updated 14:02:35
 ```
 
-> Model name (`Sonnet`, `Opus`, `Haiku`) comes from the optional statusLine hook. Shows `Claude` if hook is not installed.
+> Displays current usage across 5-hour and 7-day rate-limit windows.
 
 **Cursor** — `⌘ 620/1000` in menu bar
 
@@ -116,24 +116,10 @@ sequenceDiagram
     end
 ```
 
-```mermaid
-sequenceDiagram
-    participant CC as Claude Code CLI
-    participant Hook as save-usage-status.sh (optional)
-    participant Tmp as /tmp/claude-status-*.json
-    participant SB as SwiftBar
-
-    CC->>Hook: statusLine event (model name in JSON)
-    Hook->>Tmp: Write session file
-    Note right of SB: Reads model name<br/>from latest session file
-```
-
 > **What gets installed:**
 >
 > - `<SwiftBar plugins>/claude-usage.60s.sh` — display plugin, calls Anthropic API directly
 > - `~/.claude-usage-bar/cache.json` — cached API response (auto-created)
-> - `~/.claude/hooks/save-usage-status.sh` *(optional)* — 7-line hook for model name display
-> - `~/.claude/settings.json` *(optional)* — adds `statusLine` entry if hook is installed
 
 ### Cursor
 
