@@ -126,6 +126,15 @@ fi
 chmod +x "$PLUGIN_DEST"
 success "Plugin installed → $PLUGIN_DEST"
 
+# ── Install messages file ──────────────────────────────────────────────────
+MESSAGES_DEST="$PLUGIN_DIR/messages.json"
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/../bin/messages.json" ]; then
+  cp "$SCRIPT_DIR/messages.json" "$MESSAGES_DEST"
+else
+  curl -fsSL "$REPO_RAW/bin/messages.json" -o "$MESSAGES_DEST"
+fi
+success "Messages installed → $MESSAGES_DEST"
+
 # ── Create cache directory & write version ─────────────────────────────────
 mkdir -p "$CACHE_DIR"
 echo "$VERSION" > "$VERSION_FILE"

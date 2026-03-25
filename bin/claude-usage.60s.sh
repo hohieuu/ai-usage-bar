@@ -22,6 +22,7 @@ CACHE_FILE="$CACHE_DIR/cache.json"
 RETRY_FILE="$CACHE_DIR/retry_after"
 HEADERS_TMP="/tmp/claude-usage-api-headers.tmp"
 PLUGIN_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(cd "$(dirname "$PLUGIN_PATH")" && pwd)"
 mkdir -p "$CACHE_DIR"
 
 # ── Force-refresh flag (set by Refresh button) ─────────────────────────────
@@ -29,6 +30,10 @@ FORCE_REFRESH=0
 if [ "${1:-}" = "--force" ]; then
   FORCE_REFRESH=1
   rm -f "$RETRY_FILE"
+elif [ "${1:-}" = "--update" ]; then
+  echo "Updating Claude Usage Bar..."
+  curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install/install.sh | bash
+  exit 0
 fi
 
 # ── Get OAuth token from macOS Keychain ────────────────────────────────────
@@ -160,14 +165,20 @@ SEVEN_TIME_PCT=$(time_pct "$SEVEN_RESETS" 168)
 # ── Pick bar color based on usage ─────────────────────────────────────────
 if [ -n "$FIVE_PCT" ]; then
   FIVE_INT=$(python3 -c "print(int(float('$FIVE_PCT')))" 2>/dev/null)
-  if   [ "${FIVE_INT:-0}" -ge 80 ] 2>/dev/null; then BAR_COLOR="$C_BAD"
-  elif [ "${FIVE_INT:-0}" -ge 50 ] 2>/dev/null; then BAR_COLOR="$C_WARN"
-  else BAR_COLOR="$C_GOOD"
+  if   [ "${FIVE_INT:-0}" -ge 100 ] 2>/dev/null; then BAR_COLOR="#9966ff"; LABEL="Claude🧘100%"; LABEL_COLOR="#9966ff"
+  elif [ "${FIVE_INT:-0}" -ge 80 ] 2>/dev/null; then BAR_COLOR="$C_BAD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_BAD"
+  elif [ "${FIVE_INT:-0}" -ge 50 ] 2>/dev/null; then BAR_COLOR="$C_WARN"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_WARN"
+  else BAR_COLOR="$C_GOOD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_GOOD"
   fi
-  LABEL="Claude ${FIVE_INT}%"
-  [ "${USING_CACHE:-0}" = "1" ] && LABEL="Claude ${FIVE_INT}% ·"
+  [ "${USING_CACHE:-0}" = "1" ] && LABEL="${LABEL} ·"
 else
-  FIVE_INT=0; BAR_COLOR="$C_DIM"; LABEL="Claude --"
+  FIVE_INT=0; BAR_COLOR="$C_DIM"; LABEL="Claude --"; LABEL_COLOR="$C_DIM"
+fi
+
+if [ -n "$SEVEN_PCT" ]; then
+  SEVEN_INT=$(python3 -c "print(int(float('$SEVEN_PCT')))" 2>/dev/null)
+else
+  SEVEN_INT=0
 fi
 
 # ── Progress bar helper (10 chars) ────────────────────────────────────────
@@ -179,15 +190,37 @@ print('█' * filled + '░' * (10 - filled) + f' {p}%')
 " 2>/dev/null
 }
 
+# ── Fun message helper (reads messages.json) ────────────────────────────
+get_message() {
+  local key="$1" usage="$2" time_pct="$3" u_7d="${4:-0}"
+  local msg_file="$SCRIPT_DIR/messages.json"
+  [ -z "$usage" ] || [ -z "$time_pct" ] && return
+  [ ! -f "$msg_file" ] && return
+  python3 -c "
+import json, sys
+try:
+    with open('$msg_file') as f:
+        rules = json.load(f).get('$key', [])
+    u, t, u_7d = float('$usage'), float('$time_pct'), float('$u_7d')
+    ns = {'u': u, 't': t, 'u_7d': u_7d, 'abs': abs, 'true': True, 'false': False, '__builtins__': {}}
+    for r in rules:
+        if eval(r['when'], ns):
+            if r.get('msg'):
+                print(r['msg'] + '\n' + r.get('color', '#aaaaaa'))
+            break
+except: pass
+" 2>/dev/null
+}
+
 # ══════════════════════════════════════════════════════════════════════════
 # OUTPUT
 # ══════════════════════════════════════════════════════════════════════════
-echo "$LABEL | font=Menlo-Bold size=13 color=$BAR_COLOR"
+echo "$LABEL | font=Menlo-Bold size=13 color=${LABEL_COLOR:-$BAR_COLOR}"
 echo "---"
 
 # ── Header ─────────────────────────────────────────────────────────────────
 if [ "${USING_CACHE:-0}" = "1" ]; then
-  echo "Claude Usage  [cached] | font=Menlo-Bold size=12 color=$C_DIM,$C_DIM"
+  echo "Claude Usage | font=Menlo-Bold size=12 color=$C_DIM,$C_DIM"
 else
   echo "Claude Usage | font=Menlo-Bold size=12 color=$BAR_COLOR,$BAR_COLOR"
 fi
@@ -203,7 +236,13 @@ if [ -n "$FIVE_PCT" ] && [ -n "$FIVE_RESETS" ]; then
     fi
     echo "  ⏱   $(make_bar "$FIVE_TIME_PCT") | font=Menlo size=12 color=$TIME_COLOR,$TIME_COLOR"
   fi
-  echo "  Resets  $FIVE_RESET_STR | font=Menlo size=11 color=$C_INFO,$C_INFO"
+  echo "  Resets  $FIVE_RESET_STR | font=Menlo size=11 color=$C_DIM,$C_DIM"
+  FIVE_MSG_RAW=$(get_message "5h" "${FIVE_INT:-0}" "${FIVE_TIME_INT:-0}" "${SEVEN_INT:-0}")
+  if [ -n "$FIVE_MSG_RAW" ]; then
+    FIVE_MSG=$(echo "$FIVE_MSG_RAW" | head -1)
+    FIVE_MSG_COLOR=$(echo "$FIVE_MSG_RAW" | tail -1)
+    echo "  $FIVE_MSG | font=Menlo size=11 color=$FIVE_MSG_COLOR,$FIVE_MSG_COLOR"
+  fi
 elif [ -z "$TOKEN" ]; then
   echo "  Not logged in to Claude Code | font=Menlo size=12 color=$C_BAD,$C_BAD"
   echo "  Run: claude login | font=Menlo size=11 color=$C_DIM,$C_DIM"
@@ -213,7 +252,6 @@ fi
 
 # ── 7d window ──────────────────────────────────────────────────────────────
 if [ -n "$SEVEN_PCT" ]; then
-  SEVEN_INT=$(python3 -c "print(int(float('$SEVEN_PCT')))" 2>/dev/null)
   if   [ "${SEVEN_INT:-0}" -ge 80 ] 2>/dev/null; then SEVEN_COLOR="$C_BAD"
   elif [ "${SEVEN_INT:-0}" -ge 50 ] 2>/dev/null; then SEVEN_COLOR="$C_WARN"
   else SEVEN_COLOR="$C_GOOD"
@@ -228,27 +266,30 @@ if [ -n "$SEVEN_PCT" ]; then
     fi
     echo "  ⏱   $(make_bar "$SEVEN_TIME_PCT") | font=Menlo size=12 color=$SEVEN_TIME_COLOR,$SEVEN_TIME_COLOR"
   fi
-  echo "  Resets  $SEVEN_RESET_STR | font=Menlo size=11 color=$C_INFO,$C_INFO"
+  echo "  Resets  $SEVEN_RESET_STR | font=Menlo size=11 color=$C_DIM,$C_DIM"
+  
+  REMAINING_U=$((100 - SEVEN_INT))
+  REMAINING_D=$(python3 -c "print(max(int((100 - float('$SEVEN_TIME_INT')) / (100/7)), 1))" 2>/dev/null || echo "1")
+  PACE_NEEDED=$(python3 -c "print(round((100 - float('$SEVEN_INT')) / max(float('$REMAINING_D'), 0.1), 1))" 2>/dev/null || echo "14.0")
+  ACTUAL_RATE=$(python3 -c "print(round(float('$SEVEN_INT') / max(float('$SEVEN_TIME_INT') * 0.07, 0.1), 1))" 2>/dev/null || echo "14.0")
+  
+  SEVEN_MSG_RAW=$(get_message "7d_optimization" "${SEVEN_INT:-0}" "${SEVEN_TIME_INT:-0}")
+  if [ -n "$SEVEN_MSG_RAW" ]; then
+    SEVEN_MSG=$(echo "$SEVEN_MSG_RAW" | head -1)
+    SEVEN_MSG_COLOR=$(echo "$SEVEN_MSG_RAW" | tail -1)
+    SEVEN_MSG=${SEVEN_MSG//\{\{remaining_u\}\}/$REMAINING_U}
+    SEVEN_MSG=${SEVEN_MSG//\{\{remaining_d\}\}/$REMAINING_D}
+    SEVEN_MSG=${SEVEN_MSG//\{\{pace_needed\}\}/$PACE_NEEDED}
+    SEVEN_MSG=${SEVEN_MSG//\{\{actual_rate\}\}/$ACTUAL_RATE}
+    echo "  $SEVEN_MSG | font=Menlo size=11 color=$SEVEN_MSG_COLOR,$SEVEN_MSG_COLOR"
+  fi
 fi
 
 echo "---"
 UPDATED_AT=$(stat -f "%Sm" -t "%H:%M:%S" "$CACHE_FILE" 2>/dev/null || echo "—")
 echo "  Updated $UPDATED_AT | font=Menlo size=11 color=$C_DIM,$C_DIM"
 
-# ── Read version from repo ──────────────────────────────────────────────
-REPO_DIR="$HOME/Documents/code/ai-usage-bar"
-VERSION_FILE="$REPO_DIR/VERSION"
-VERSION=""
-if [ -f "$VERSION_FILE" ]; then
-  VERSION=$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]')
-fi
-
 # ── Refresh button (green) ──────────────────────────────────────────────
-echo "Refresh | bash=$PLUGIN_PATH param1=--force terminal=false refresh=true font=Menlo size=11 color=$C_GOOD,$C_GOOD"
-
-# ── Check for update button (gray, shows version) ──────────────────────
-if [ -f "$REPO_DIR/install/update" ]; then
-  UPDATE_LABEL="Check for Update"
-  [ -n "$VERSION" ] && UPDATE_LABEL="Check for Update - $VERSION"
-  echo "$UPDATE_LABEL | bash=$REPO_DIR/install/update terminal=true font=Menlo size=11 color=$C_DIM,$C_DIM"
-fi
+PLUGIN_PATH_FULL="$(cd "$(dirname "$PLUGIN_PATH")" && pwd)/$(basename "$PLUGIN_PATH")"
+echo "Refresh | bash=$PLUGIN_PATH_FULL param1=--force terminal=false refresh=true font=Menlo size=11 color=$C_GOOD,$C_GOOD"
+echo "Check for update | bash=$PLUGIN_PATH_FULL param1=--update terminal=true font=Menlo size=11 color=$C_INFO,$C_INFO"
