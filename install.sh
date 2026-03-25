@@ -3,7 +3,12 @@
 # Usage: curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install.sh | bash
 set -euo pipefail
 
-VERSION="2.0.0"
+# Read version from VERSION file (or fallback if not available)
+VERSION=""
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/VERSION" ]; then
+  VERSION=$(cat "$(dirname "${BASH_SOURCE[0]:-}")/VERSION" 2>/dev/null | tr -d '[:space:]')
+fi
+VERSION="${VERSION:-2.0.0}"
 REPO_RAW="https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main"
 CACHE_DIR="$HOME/.claude-usage-bar"
 VERSION_FILE="$CACHE_DIR/installed_version"

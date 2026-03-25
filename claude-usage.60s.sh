@@ -234,4 +234,21 @@ fi
 echo "---"
 UPDATED_AT=$(stat -f "%Sm" -t "%H:%M:%S" "$CACHE_FILE" 2>/dev/null || echo "—")
 echo "  Updated $UPDATED_AT | font=Menlo size=11 color=$C_DIM,$C_DIM"
-echo "Refresh | bash=$PLUGIN_PATH param1=--force terminal=false refresh=true font=Menlo size=11 color=$C_DIM,$C_DIM"
+
+# ── Read version from repo ──────────────────────────────────────────────
+REPO_DIR="$HOME/Documents/code/ai-usage-bar"
+VERSION_FILE="$REPO_DIR/VERSION"
+VERSION=""
+if [ -f "$VERSION_FILE" ]; then
+  VERSION=$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]')
+fi
+
+# ── Refresh button (green) ──────────────────────────────────────────────
+echo "Refresh | bash=$PLUGIN_PATH param1=--force terminal=false refresh=true font=Menlo size=11 color=$C_GOOD,$C_GOOD"
+
+# ── Check for update button (gray, shows version) ──────────────────────
+if [ -f "$REPO_DIR/update" ]; then
+  UPDATE_LABEL="Check for Update"
+  [ -n "$VERSION" ] && UPDATE_LABEL="Check for Update - $VERSION"
+  echo "$UPDATE_LABEL | bash=$REPO_DIR/update terminal=true font=Menlo size=11 color=$C_DIM,$C_DIM"
+fi
