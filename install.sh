@@ -57,9 +57,9 @@ info "Checking Claude Code login..."
 TOKEN=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null \
   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('claudeAiOauth',{}).get('accessToken',''))" 2>/dev/null || true)
 if [ -z "$TOKEN" ]; then
-  die "Claude Code credentials not found.\n  Log in first: claude login"
+  die "Not logged in to Claude Code.\n\n  Fix: open a terminal and run:\n\n    claude login\n\n  Then re-run this installer."
 fi
-success "Claude Code credentials found"
+success "Logged in to Claude Code"
 
 # ── Check / install SwiftBar ───────────────────────────────────────────────
 info "Checking SwiftBar..."

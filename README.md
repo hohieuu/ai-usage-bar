@@ -16,7 +16,7 @@ Real-time **Claude Code** and **Cursor** usage in your macOS menu bar via [Swift
 
 ### Claude Code
 
-**Prerequisites:** [SwiftBar](https://swiftbar.app) (`brew install --cask swiftbar`), Python 3, `jq` (`brew install jq`), Claude Code (must be logged in)
+**Prerequisites:** [SwiftBar](https://swiftbar.app) (`brew install --cask swiftbar`), Python 3, `jq` (`brew install jq`), [Claude Code](https://claude.ai/download) — must be logged in (`claude login`)
 
 ```bash
 # One-liner
