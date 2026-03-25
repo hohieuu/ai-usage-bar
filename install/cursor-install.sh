@@ -80,11 +80,11 @@ PLUGIN_DEST="$PLUGIN_DIR/cursor-usage.10m.sh"
 # Remove old versions if present
 rm -f "$PLUGIN_DIR/cursor-usage.5s.sh" "$PLUGIN_DIR/cursor-usage.30s.sh" 2>/dev/null
 
-if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/cursor-usage.10m.sh" ]; then
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/../bin/cursor-usage.10m.sh" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")/../bin" && pwd)"
   cp "$SCRIPT_DIR/cursor-usage.10m.sh" "$PLUGIN_DEST"
 else
-  curl -fsSL "$REPO_RAW/cursor-usage.10m.sh" -o "$PLUGIN_DEST"
+  curl -fsSL "$REPO_RAW/bin/cursor-usage.10m.sh" -o "$PLUGIN_DEST"
 fi
 
 chmod +x "$PLUGIN_DEST"

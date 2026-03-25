@@ -5,8 +5,8 @@ set -euo pipefail
 
 # Read version from VERSION file (or fallback if not available)
 VERSION=""
-if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/VERSION" ]; then
-  VERSION=$(cat "$(dirname "${BASH_SOURCE[0]:-}")/VERSION" 2>/dev/null | tr -d '[:space:]')
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/../VERSION" ]; then
+  VERSION=$(cat "$(dirname "${BASH_SOURCE[0]:-}")/../VERSION" 2>/dev/null | tr -d '[:space:]')
 fi
 VERSION="${VERSION:-2.0.0}"
 REPO_RAW="https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main"
@@ -117,11 +117,11 @@ fi
 info "Installing SwiftBar plugin (v${VERSION})..."
 PLUGIN_DEST="$PLUGIN_DIR/claude-usage.60s.sh"
 
-if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/claude-usage.60s.sh" ]; then
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/../bin/claude-usage.60s.sh" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")/../bin" && pwd)"
   cp "$SCRIPT_DIR/claude-usage.60s.sh" "$PLUGIN_DEST"
 else
-  curl -fsSL "$REPO_RAW/claude-usage.60s.sh" -o "$PLUGIN_DEST"
+  curl -fsSL "$REPO_RAW/bin/claude-usage.60s.sh" -o "$PLUGIN_DEST"
 fi
 chmod +x "$PLUGIN_DEST"
 success "Plugin installed → $PLUGIN_DEST"
