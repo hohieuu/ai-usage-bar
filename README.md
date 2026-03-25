@@ -34,7 +34,7 @@ git clone https://github.com/hohieuu/ai-usage-bar && bash ai-usage-bar/install/i
   </div>
 </div>
 
-<div style="background-color: #09a3a3; padding: 2px; border-radius: 8px; margin: 16px 0;">
+<div style="background-color: #000000; padding: 2px; border-radius: 8px; margin: 16px 0;">
   <div style="background-color: #fff; padding: 16px; border-radius: 6px;">
 
 ### <img src=".assets/cursor-color.svg" height="24" style="vertical-align: middle; margin-right: 8px;" /> Cursor
@@ -182,7 +182,7 @@ curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install/u
   </div>
 </div>
 
-<div style="background-color: #09a3a3; padding: 2px; border-radius: 8px; margin: 16px 0;">
+<div style="background-color: #000000; padding: 2px; border-radius: 8px; margin: 16px 0;">
   <div style="background-color: #fff; padding: 16px; border-radius: 6px;">
 
 ### <img src=".assets/cursor-color.svg" height="24" style="vertical-align: middle; margin-right: 8px;" /> Cursor
