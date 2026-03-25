@@ -1,6 +1,11 @@
 #!/bin/bash
-# Claude Code Usage Bar — SwiftBar Plugin
-# Repo: https://github.com/YOUR_USERNAME/claude-usage-bar
+# ⚠️  DEPRECATED — Use claude-usage.60s.sh instead (API-based, no hook required)
+# This version depends on a statusLine hook writing to /tmp/claude-status-*.json.
+# The new version calls the Claude API directly — simpler setup, no hook needed.
+# Migrate: run install-v2.sh  |  Last updated: 2026-03-25
+#
+# Claude Code Usage Bar — SwiftBar Plugin (hook-based, deprecated)
+# Repo: https://github.com/hohieuu/ai-usage-bar
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>false</swiftbar.hideRunInTerminal>
 # <swiftbar.hideLastUpdated>true</swiftbar.hideLastUpdated>

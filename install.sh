@@ -3,7 +3,10 @@
 # Usage: curl -fsSL https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main/install.sh | bash
 set -euo pipefail
 
+VERSION="2.0.0"
 REPO_RAW="https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main"
+CACHE_DIR="$HOME/.claude-usage-bar"
+VERSION_FILE="$CACHE_DIR/installed_version"
 HOOK_PATH="$HOME/.claude/hooks/save-usage-status.sh"
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 
@@ -14,9 +17,28 @@ success() { echo -e "${G}[✓]${N} $*"; }
 warn()    { echo -e "${Y}[!]${N} $*"; }
 die()     { echo -e "${R}[✗]${N} $*" >&2; exit 1; }
 
+# ── Detect installed version ───────────────────────────────────────────────
+INSTALLED_VERSION=""
+IS_UPGRADE=0
+IS_LEGACY_UPGRADE=0
+
+if [ -f "$VERSION_FILE" ]; then
+  INSTALLED_VERSION=$(cat "$VERSION_FILE" 2>/dev/null || true)
+fi
+
 echo ""
 echo -e "${B}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${N}"
-echo -e "${B}  Claude Usage Bar — Installer        ${N}"
+if [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" != "$VERSION" ]; then
+  IS_UPGRADE=1
+  echo -e "${B}  Claude Usage Bar — Updater          ${N}"
+  echo -e "${B}  ${INSTALLED_VERSION} → ${VERSION}                  ${N}"
+elif [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" = "$VERSION" ]; then
+  echo -e "${B}  Claude Usage Bar — Reinstall        ${N}"
+  echo -e "${B}  Already on v${VERSION}                  ${N}"
+else
+  echo -e "${B}  Claude Usage Bar — Installer        ${N}"
+  echo -e "${B}  v${VERSION}                               ${N}"
+fi
 echo -e "${B}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${N}"
 echo ""
 
@@ -25,22 +47,19 @@ echo ""
 
 # ── Check: dependencies ────────────────────────────────────────────────────
 info "Checking dependencies..."
-command -v python3  &>/dev/null || die "python3 not found. Install via: brew install python3"
-command -v sqlite3  &>/dev/null || die "sqlite3 not found."
-command -v claude   &>/dev/null || die "Claude Code CLI not found. Install from: https://claude.ai/download"
+command -v python3 &>/dev/null || die "python3 not found. Install via: brew install python3"
+command -v curl    &>/dev/null || die "curl not found."
+command -v jq      &>/dev/null || die "jq not found. Install via: brew install jq"
+success "Dependencies OK"
 
-# ── Check: Claude Code version ─────────────────────────────────────────────
-CLAUDE_VERSION=$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-MIN_VERSION="2.1.81"
-version_gte() {
-  printf '%s\n%s' "$2" "$1" | sort -V -C
-}
-if [ -z "$CLAUDE_VERSION" ]; then
-  warn "Could not determine Claude Code version — proceeding anyway."
-elif ! version_gte "$CLAUDE_VERSION" "$MIN_VERSION"; then
-  die "Claude Code $CLAUDE_VERSION is too old. Minimum required: $MIN_VERSION\n  Update with: npm update -g @anthropic-ai/claude-code"
+# ── Check: Claude Code logged in ──────────────────────────────────────────
+info "Checking Claude Code login..."
+TOKEN=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('claudeAiOauth',{}).get('accessToken',''))" 2>/dev/null || true)
+if [ -z "$TOKEN" ]; then
+  die "Claude Code credentials not found.\n  Log in first: claude login"
 fi
-success "Dependencies OK (Claude Code $CLAUDE_VERSION)"
+success "Claude Code credentials found"
 
 # ── Check / install SwiftBar ───────────────────────────────────────────────
 info "Checking SwiftBar..."
@@ -66,74 +85,46 @@ else
   success "Plugin dir: $PLUGIN_DIR"
 fi
 
-# ── Download/copy plugin ───────────────────────────────────────────────────
-info "Installing SwiftBar plugin..."
-PLUGIN_DEST="$PLUGIN_DIR/claude-usage.5s.sh"
-
-if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/claude-usage.5s.sh" ]; then
-  # Running from cloned repo — copy local files
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
-  cp "$SCRIPT_DIR/claude-usage.5s.sh" "$PLUGIN_DEST"
-  HOOK_SRC="$SCRIPT_DIR/save-usage-status.sh"
-else
-  # Running via curl | bash — download from GitHub
-  curl -fsSL "$REPO_RAW/claude-usage.5s.sh" -o "$PLUGIN_DEST"
-  HOOK_SRC=""
+# ── Detect & clean up legacy hook-based install ────────────────────────────
+OLD_PLUGIN="$PLUGIN_DIR/claude-usage.5s.sh"
+if [ -f "$OLD_PLUGIN" ]; then
+  IS_LEGACY_UPGRADE=1
+  warn "Legacy hook-based plugin detected — upgrading to API-based v${VERSION}"
+  rm -f "$OLD_PLUGIN"
+  # Clean up hook + settings.json statusLine entry
+  rm -f "$HOOK_PATH" 2>/dev/null || true
+  if [ -f "$CLAUDE_SETTINGS" ]; then
+    python3 -c "
+import json
+from pathlib import Path
+p = Path('$CLAUDE_SETTINGS')
+s = json.loads(p.read_text())
+if 'statusLine' in s:
+    s.pop('statusLine')
+    p.write_text(json.dumps(s, indent=2))
+" 2>/dev/null || true
+  fi
+  rm -f /tmp/claude-status-*.json 2>/dev/null || true
+  success "Legacy install cleaned up"
 fi
 
+# ── Install plugin ─────────────────────────────────────────────────────────
+info "Installing SwiftBar plugin (v${VERSION})..."
+PLUGIN_DEST="$PLUGIN_DIR/claude-usage.60s.sh"
+
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/claude-usage.60s.sh" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
+  cp "$SCRIPT_DIR/claude-usage.60s.sh" "$PLUGIN_DEST"
+else
+  curl -fsSL "$REPO_RAW/claude-usage.60s.sh" -o "$PLUGIN_DEST"
+fi
 chmod +x "$PLUGIN_DEST"
 success "Plugin installed → $PLUGIN_DEST"
 
-# ── Install Claude hook ────────────────────────────────────────────────────
-info "Installing Claude statusLine hook..."
-mkdir -p "$(dirname "$HOOK_PATH")"
-
-if [ -n "$HOOK_SRC" ] && [ -f "$HOOK_SRC" ]; then
-  cp "$HOOK_SRC" "$HOOK_PATH"
-else
-  curl -fsSL "$REPO_RAW/save-usage-status.sh" -o "$HOOK_PATH"
-fi
-chmod +x "$HOOK_PATH"
-success "Hook installed → $HOOK_PATH"
-
-# ── Patch ~/.claude/settings.json ─────────────────────────────────────────
-info "Configuring Claude Code settings..."
-
-if [ ! -f "$CLAUDE_SETTINGS" ]; then
-  echo '{"statusLine":{"type":"command","command":"'"$HOOK_PATH"'"}}' > "$CLAUDE_SETTINGS"
-  success "Created $CLAUDE_SETTINGS"
-else
-  python3 - "$CLAUDE_SETTINGS" "$HOOK_PATH" <<'PYEOF'
-import json, sys, shutil
-from pathlib import Path
-
-settings_path = Path(sys.argv[1])
-hook_path = sys.argv[2]
-
-# Backup
-shutil.copy(settings_path, str(settings_path) + ".bak")
-
-with open(settings_path) as f:
-    settings = json.load(f)
-
-existing = settings.get("statusLine", {})
-if existing.get("command") == hook_path:
-    print("  statusLine already configured, skipping.")
-    sys.exit(0)
-
-if existing and existing.get("command") != hook_path:
-    print(f"  ⚠️  Existing statusLine found: {existing.get('command')}")
-    print(f"  Overwriting with: {hook_path}")
-
-settings["statusLine"] = {"type": "command", "command": hook_path}
-
-with open(settings_path, "w") as f:
-    json.dump(settings, f, indent=2)
-
-print(f"  ✓ settings.json updated")
-PYEOF
-  success "Claude settings configured"
-fi
+# ── Create cache directory & write version ─────────────────────────────────
+mkdir -p "$CACHE_DIR"
+echo "$VERSION" > "$VERSION_FILE"
+success "Version recorded → v${VERSION}"
 
 # ── Launch / refresh SwiftBar ──────────────────────────────────────────────
 info "Refreshing SwiftBar..."
@@ -148,88 +139,15 @@ fi
 # ── Done ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${G}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${N}"
-echo -e "${G}  Installation complete! 🎉           ${N}"
+if [ "$IS_LEGACY_UPGRADE" = "1" ]; then
+  echo -e "${G}  Upgraded from hook-based → v${VERSION}  ${N}"
+  echo -e "${G}  No hook or settings.json needed     ${N}"
+elif [ "$IS_UPGRADE" = "1" ]; then
+  echo -e "${G}  Updated to v${VERSION}!                   ${N}"
+else
+  echo -e "${G}  Installation complete! v${VERSION}        ${N}"
+fi
 echo -e "${G}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${N}"
 echo ""
-
-# ── Verify installation ─────────────────────────────────────────────────────
-echo -e "${B}Verifying setup...${N}"
-echo ""
-
-VERIFY_PASS=0
-VERIFY_FAIL=0
-
-if [ -x "$HOOK_PATH" ]; then
-  success "Hook installed & executable: $HOOK_PATH"
-  ((VERIFY_PASS++))
-else
-  warn "Hook missing or not executable: $HOOK_PATH"
-  ((VERIFY_FAIL++))
-fi
-
-if [ -x "$PLUGIN_DEST" ]; then
-  success "Plugin installed & executable: $PLUGIN_DEST"
-  ((VERIFY_PASS++))
-else
-  warn "Plugin missing or not executable: $PLUGIN_DEST"
-  ((VERIFY_FAIL++))
-fi
-
-if [ -f "$CLAUDE_SETTINGS" ]; then
-  if grep -q "statusLine" "$CLAUDE_SETTINGS" 2>/dev/null; then
-    success "settings.json configured with statusLine hook"
-    ((VERIFY_PASS++))
-  else
-    warn "settings.json exists but statusLine hook not found"
-    ((VERIFY_FAIL++))
-  fi
-else
-  warn "settings.json not found"
-  ((VERIFY_FAIL++))
-fi
-
-if [ -d "$PLUGIN_DIR" ] && [ -w "$PLUGIN_DIR" ]; then
-  success "SwiftBar plugin directory writable: $PLUGIN_DIR"
-  ((VERIFY_PASS++))
-else
-  warn "SwiftBar plugin directory not writable: $PLUGIN_DIR"
-  ((VERIFY_FAIL++))
-fi
-
-echo ""
-if [ $VERIFY_FAIL -eq 0 ]; then
-  echo -e "${G}All checks passed! ✓${N}"
-  echo ""
-  echo "Next steps:"
-  echo "  1. Restart Claude Code"
-  echo "  2. Generate a response"
-  echo "  3. Check menu bar for 'CC' usage indicator"
-  echo ""
-else
-  echo -e "${Y}⚠️  ${VERIFY_FAIL} issue(s) detected. Attempting fixes...${N}"
-  echo ""
-
-  if [ ! -x "$HOOK_PATH" ]; then
-    warn "Fixing hook permissions..."
-    chmod +x "$HOOK_PATH" 2>/dev/null && success "✓ Hook fixed" || warn "Could not fix hook"
-  fi
-
-  if [ ! -x "$PLUGIN_DEST" ]; then
-    warn "Fixing plugin permissions..."
-    chmod +x "$PLUGIN_DEST" 2>/dev/null && success "✓ Plugin fixed" || warn "Could not fix plugin"
-  fi
-
-  if [ ! -d "$PLUGIN_DIR" ] || [ ! -w "$PLUGIN_DIR" ]; then
-    warn "SwiftBar plugin directory permission issue"
-    warn "Try: open /Applications/SwiftBar.app"
-    warn "Then go to Settings → Plugin Folder and select: $PLUGIN_DIR"
-  fi
-
-  echo ""
-  info "If issues persist, run for debugging:"
-  echo "  bash show-usage.sh           # See live usage data"
-  echo "  cat $CLAUDE_SETTINGS   # Check hook config"
-  echo "  ls -la $PLUGIN_DIR/   # Check plugin files"
-fi
-
+echo "Usage data will appear in your menu bar within 60 seconds."
 echo ""
