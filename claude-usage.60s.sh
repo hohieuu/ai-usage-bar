@@ -164,10 +164,10 @@ if [ -n "$FIVE_PCT" ]; then
   elif [ "${FIVE_INT:-0}" -ge 50 ] 2>/dev/null; then BAR_COLOR="$C_WARN"
   else BAR_COLOR="$C_GOOD"
   fi
-  LABEL="CC ${FIVE_INT}%"
-  [ "${USING_CACHE:-0}" = "1" ] && LABEL="CC ${FIVE_INT}% ·"
+  LABEL="Claude ${FIVE_INT}%"
+  [ "${USING_CACHE:-0}" = "1" ] && LABEL="Claude ${FIVE_INT}% ·"
 else
-  FIVE_INT=0; BAR_COLOR="$C_DIM"; LABEL="CC --"
+  FIVE_INT=0; BAR_COLOR="$C_DIM"; LABEL="Claude --"
 fi
 
 # ── Progress bar helper (10 chars) ────────────────────────────────────────
