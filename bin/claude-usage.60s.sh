@@ -11,10 +11,20 @@
 # <swiftbar.hideSwiftBar>false</swiftbar.hideSwiftBar>
 # <swiftbar.title>Claude Usage</swiftbar.title>
 
-# ── Theme: always dark ─────────────────────────────────────────────────────
-C_GOOD="#00cc44";  C_WARN="#ffaa00";  C_BAD="#ff4444"
-C_DIM="#aaaaaa";   C_INFO="#6699ff";  C_FG="#ffffff"
-C_TIME="#44aaff"
+# ── Detect light/dark mode and set colors ──────────────────────────────────
+LIGHT_GOOD="#005e00";   DARK_GOOD="#00cc44"
+LIGHT_WARN="#dd5500";   DARK_WARN="#ffaa00"
+LIGHT_BAD="#dd0000";    DARK_BAD="#ff4444"
+LIGHT_DIM="#333333";    DARK_DIM="#aaaaaa"
+LIGHT_INFO="#0055dd";   DARK_INFO="#6699ff"
+LIGHT_TIME="#0099dd";   DARK_TIME="#44aaff"
+
+C_GOOD="$LIGHT_GOOD,$DARK_GOOD"
+C_WARN="$LIGHT_WARN,$DARK_WARN"
+C_BAD="$LIGHT_BAD,$DARK_BAD"
+C_DIM="$LIGHT_DIM,$DARK_DIM"
+C_INFO="$LIGHT_INFO,$DARK_INFO"
+C_TIME="$LIGHT_TIME,$DARK_TIME"
 
 # ── Cache paths ────────────────────────────────────────────────────────────
 CACHE_DIR="$HOME/.claude-usage-bar"
@@ -165,7 +175,7 @@ SEVEN_TIME_PCT=$(time_pct "$SEVEN_RESETS" 168)
 # ── Pick bar color based on usage ─────────────────────────────────────────
 if [ -n "$FIVE_PCT" ]; then
   FIVE_INT=$(python3 -c "print(int(float('$FIVE_PCT')))" 2>/dev/null)
-  if   [ "${FIVE_INT:-0}" -ge 100 ] 2>/dev/null; then BAR_COLOR="#9966ff"; LABEL="Claude🧘100%"; LABEL_COLOR="#9966ff"
+  if   [ "${FIVE_INT:-0}" -ge 100 ] 2>/dev/null; then BAR_COLOR="#5500cc,#9966ff"; LABEL="Claude🧘100%"; LABEL_COLOR="#5500cc,#9966ff"
   elif [ "${FIVE_INT:-0}" -ge 80 ] 2>/dev/null; then BAR_COLOR="$C_BAD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_BAD"
   elif [ "${FIVE_INT:-0}" -ge 50 ] 2>/dev/null; then BAR_COLOR="$C_WARN"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_WARN"
   else BAR_COLOR="$C_GOOD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_GOOD"
@@ -220,34 +230,34 @@ echo "---"
 
 # ── Header ─────────────────────────────────────────────────────────────────
 if [ "${USING_CACHE:-0}" = "1" ]; then
-  echo "Claude Usage | font=Menlo-Bold size=12 color=$C_DIM,$C_DIM"
+  echo "Claude Usage | font=Menlo-Bold size=12 color=$C_DIM refresh=true"
 else
-  echo "Claude Usage | font=Menlo-Bold size=12 color=$BAR_COLOR,$BAR_COLOR"
+  echo "Claude Usage | font=Menlo-Bold size=12 color=$BAR_COLOR refresh=true"
 fi
 
 # ── 5h window ──────────────────────────────────────────────────────────────
 if [ -n "$FIVE_PCT" ] && [ -n "$FIVE_RESETS" ]; then
-  echo "  5h  $(make_bar "$FIVE_PCT") | font=Menlo size=12 color=$BAR_COLOR,$BAR_COLOR"
+  echo "  5h  $(make_bar "$FIVE_PCT") | font=Menlo size=12 color=$BAR_COLOR refresh=true"
   if [ -n "$FIVE_TIME_PCT" ]; then
     FIVE_TIME_INT=$(python3 -c "print(int(float('$FIVE_TIME_PCT')))" 2>/dev/null)
     if   [ "${FIVE_TIME_INT:-0}" -ge 90 ] 2>/dev/null; then TIME_COLOR="$C_BAD"
     elif [ "${FIVE_TIME_INT:-0}" -ge 75 ] 2>/dev/null; then TIME_COLOR="$C_WARN"
     else TIME_COLOR="$C_TIME"
     fi
-    echo "  ⏱   $(make_bar "$FIVE_TIME_PCT") | font=Menlo size=12 color=$TIME_COLOR,$TIME_COLOR"
+    echo "  ⏱   $(make_bar "$FIVE_TIME_PCT") | font=Menlo size=12 color=$TIME_COLOR refresh=true"
   fi
-  echo "  Resets  $FIVE_RESET_STR | font=Menlo size=11 color=$C_DIM,$C_DIM"
+  echo "  Resets  $FIVE_RESET_STR | font=Menlo size=11 color=$C_DIM refresh=true"
   FIVE_MSG_RAW=$(get_message "5h" "${FIVE_INT:-0}" "${FIVE_TIME_INT:-0}" "${SEVEN_INT:-0}")
   if [ -n "$FIVE_MSG_RAW" ]; then
     FIVE_MSG=$(echo "$FIVE_MSG_RAW" | head -1)
     FIVE_MSG_COLOR=$(echo "$FIVE_MSG_RAW" | tail -1)
-    echo "  $FIVE_MSG | font=Menlo size=11 color=$FIVE_MSG_COLOR,$FIVE_MSG_COLOR"
+    echo "  $FIVE_MSG | font=Menlo size=11 color=$FIVE_MSG_COLOR refresh=true"
   fi
 elif [ -z "$TOKEN" ]; then
-  echo "  Not logged in to Claude Code | font=Menlo size=12 color=$C_BAD,$C_BAD"
-  echo "  Run: claude login | font=Menlo size=11 color=$C_DIM,$C_DIM"
+  echo "  Not logged in to Claude Code | font=Menlo size=12 color=$C_BAD refresh=true"
+  echo "  Run: claude login | font=Menlo size=11 color=$C_DIM refresh=true"
 else
-  echo "  Fetching usage... | font=Menlo size=12 color=$C_DIM,$C_DIM"
+  echo "  Fetching usage... | font=Menlo size=12 color=$C_DIM refresh=true"
 fi
 
 # ── 7d window ──────────────────────────────────────────────────────────────
@@ -257,16 +267,16 @@ if [ -n "$SEVEN_PCT" ]; then
   else SEVEN_COLOR="$C_GOOD"
   fi
   echo "---"
-  echo "  7d  $(make_bar "$SEVEN_PCT") | font=Menlo size=12 color=$SEVEN_COLOR,$SEVEN_COLOR"
+  echo "  7d  $(make_bar "$SEVEN_PCT") | font=Menlo size=12 color=$SEVEN_COLOR refresh=true"
   if [ -n "$SEVEN_TIME_PCT" ]; then
     SEVEN_TIME_INT=$(python3 -c "print(int(float('$SEVEN_TIME_PCT')))" 2>/dev/null)
     if   [ "${SEVEN_TIME_INT:-0}" -ge 90 ] 2>/dev/null; then SEVEN_TIME_COLOR="$C_BAD"
     elif [ "${SEVEN_TIME_INT:-0}" -ge 75 ] 2>/dev/null; then SEVEN_TIME_COLOR="$C_WARN"
     else SEVEN_TIME_COLOR="$C_TIME"
     fi
-    echo "  ⏱   $(make_bar "$SEVEN_TIME_PCT") | font=Menlo size=12 color=$SEVEN_TIME_COLOR,$SEVEN_TIME_COLOR"
+    echo "  ⏱   $(make_bar "$SEVEN_TIME_PCT") | font=Menlo size=12 color=$SEVEN_TIME_COLOR refresh=true"
   fi
-  echo "  Resets  $SEVEN_RESET_STR | font=Menlo size=11 color=$C_DIM,$C_DIM"
+  echo "  Resets  $SEVEN_RESET_STR | font=Menlo size=11 color=$C_DIM refresh=true"
   
   REMAINING_U=$((100 - SEVEN_INT))
   REMAINING_D=$(python3 -c "print(max(int((100 - float('$SEVEN_TIME_INT')) / (100/7)), 1))" 2>/dev/null || echo "1")
@@ -281,15 +291,15 @@ if [ -n "$SEVEN_PCT" ]; then
     SEVEN_MSG=${SEVEN_MSG//\{\{remaining_d\}\}/$REMAINING_D}
     SEVEN_MSG=${SEVEN_MSG//\{\{pace_needed\}\}/$PACE_NEEDED}
     SEVEN_MSG=${SEVEN_MSG//\{\{actual_rate\}\}/$ACTUAL_RATE}
-    echo "  $SEVEN_MSG | font=Menlo size=11 color=$SEVEN_MSG_COLOR,$SEVEN_MSG_COLOR"
+    echo "  $SEVEN_MSG | font=Menlo size=11 color=$SEVEN_MSG_COLOR refresh=true"
   fi
 fi
 
 echo "---"
 UPDATED_AT=$(stat -f "%Sm" -t "%H:%M:%S" "$CACHE_FILE" 2>/dev/null || echo "—")
-echo "  Updated $UPDATED_AT | font=Menlo size=11 color=$C_DIM,$C_DIM"
+echo "  Updated $UPDATED_AT | font=Menlo size=11 color=$C_DIM refresh=true"
 
 # ── Refresh button (green) ──────────────────────────────────────────────
 PLUGIN_PATH_FULL="$(cd "$(dirname "$PLUGIN_PATH")" && pwd)/$(basename "$PLUGIN_PATH")"
-echo "Refresh | bash=$PLUGIN_PATH_FULL param1=--force terminal=false refresh=true font=Menlo size=11 color=$C_GOOD,$C_GOOD"
-echo "Check for update | bash=$PLUGIN_PATH_FULL param1=--update terminal=true font=Menlo size=11 color=$C_INFO,$C_INFO"
+echo "Refresh | bash=$PLUGIN_PATH_FULL param1=--force terminal=false refresh=true font=Menlo size=11 color=$C_GOOD"
+echo "Check for update | bash=$PLUGIN_PATH_FULL param1=--update terminal=true font=Menlo size=11 color=$C_INFO"
