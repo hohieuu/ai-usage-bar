@@ -90,16 +90,16 @@ else
   success "Plugin dir: $PLUGIN_DIR"
 fi
 
-# ── Detect & clean up legacy hook-based install ────────────────────────────
-OLD_PLUGIN="$PLUGIN_DIR/claude-usage.5s.sh"
-if [ -f "$OLD_PLUGIN" ]; then
+# ── Clean up ALL existing claude-usage.* files/dirs ───────────────────────
+info "Cleaning up any existing claude-usage plugins..."
+find "$PLUGIN_DIR" -maxdepth 1 -name "claude-usage.*" -exec rm -rf {} + 2>/dev/null || true
+# Clean up legacy hook if present
+if [ -f "$PLUGIN_DIR/claude-usage.5s.sh" ] || [ -f "$PLUGIN_DIR/claude-usage.60s.sh" ]; then
   IS_LEGACY_UPGRADE=1
-  warn "Legacy hook-based plugin detected — upgrading to API-based v${VERSION}"
-  rm -f "$OLD_PLUGIN"
-  # Clean up hook + settings.json statusLine entry
-  rm -f "$HOOK_PATH" 2>/dev/null || true
-  if [ -f "$CLAUDE_SETTINGS" ]; then
-    python3 -c "
+fi
+rm -f "$HOOK_PATH" 2>/dev/null || true
+if [ -f "$CLAUDE_SETTINGS" ]; then
+  python3 -c "
 import json
 from pathlib import Path
 p = Path('$CLAUDE_SETTINGS')
@@ -108,20 +108,21 @@ if 'statusLine' in s:
     s.pop('statusLine')
     p.write_text(json.dumps(s, indent=2))
 " 2>/dev/null || true
-  fi
-  rm -f /tmp/claude-status-*.json 2>/dev/null || true
-  success "Legacy install cleaned up"
 fi
+rm -f /tmp/claude-status-*.json 2>/dev/null || true
+# Clear rate limit cache on fresh install
+rm -f "$HOME/.claude-usage-bar/retry_after" "$HOME/.claude-usage-bar/stale_count" "$HOME/.claude-usage-bar/err429_count" 2>/dev/null || true
+success "Cleaned up previous installs"
 
 # ── Install plugin ─────────────────────────────────────────────────────────
 info "Installing SwiftBar plugin (v${VERSION})..."
-PLUGIN_DEST="$PLUGIN_DIR/claude-usage.60s.sh"
+PLUGIN_DEST="$PLUGIN_DIR/claude-usage.3m.sh"
 
-if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/../bin/claude-usage.60s.sh" ]; then
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/../bin/claude-usage.3m.sh" ]; then
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")/../bin" && pwd)"
-  cp "$SCRIPT_DIR/claude-usage.60s.sh" "$PLUGIN_DEST"
+  cp "$SCRIPT_DIR/claude-usage.3m.sh" "$PLUGIN_DEST"
 else
-  curl -fsSL "$REPO_RAW/bin/claude-usage.60s.sh" -o "$PLUGIN_DEST"
+  curl -fsSL "$REPO_RAW/bin/claude-usage.3m.sh" -o "$PLUGIN_DEST"
 fi
 chmod +x "$PLUGIN_DEST"
 success "Plugin installed → $PLUGIN_DEST"
@@ -163,5 +164,5 @@ else
 fi
 echo -e "${G}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${N}"
 echo ""
-echo "Usage data will appear in your menu bar within 60 seconds."
+echo "Usage data will appear in your menu bar within 3 minutes."
 echo ""

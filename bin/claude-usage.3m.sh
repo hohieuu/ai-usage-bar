@@ -30,6 +30,8 @@ C_TIME="$LIGHT_TIME,$DARK_TIME"
 CACHE_DIR="$HOME/.claude-usage-bar"
 CACHE_FILE="$CACHE_DIR/cache.json"
 RETRY_FILE="$CACHE_DIR/retry_after"
+STALE_FILE="$CACHE_DIR/stale_count"
+ERR429_FILE="$CACHE_DIR/err429_count"
 HEADERS_TMP="/tmp/claude-usage-api-headers.tmp"
 PLUGIN_PATH="${BASH_SOURCE[0]}"
 SCRIPT_DIR="$(cd "$(dirname "$PLUGIN_PATH")" && pwd)"
@@ -62,7 +64,7 @@ fetch_usage() {
   [ -z "$TOKEN" ] && return 1
 
   # Skip if cache is fresh and not a forced refresh
-  if [ "$FORCE_REFRESH" = "0" ] && [ "$CACHE_AGE" -lt 60 ] 2>/dev/null; then
+  if [ "$FORCE_REFRESH" = "0" ] && [ "$CACHE_AGE" -lt 180 ] 2>/dev/null; then
     return 1
   fi
 
@@ -87,7 +89,7 @@ fetch_usage() {
 
   if [ "$HTTP_CODE" = "200" ]; then
     echo "$RESPONSE" > "$CACHE_FILE"
-    rm -f "$RETRY_FILE"
+    rm -f "$RETRY_FILE" "$STALE_FILE" "$ERR429_FILE"
     echo "$RESPONSE"
     return 0
   elif [ "$HTTP_CODE" = "429" ]; then
@@ -95,6 +97,8 @@ fetch_usage() {
     if [ -n "$RETRY_SECS" ]; then
       echo $(( $(date +%s) + RETRY_SECS )) > "$RETRY_FILE"
     fi
+    _C=$(cat "$ERR429_FILE" 2>/dev/null || echo 0)
+    echo $(( _C + 1 )) > "$ERR429_FILE"
   fi
   return 1
 }
@@ -104,6 +108,23 @@ API_DATA=$(fetch_usage 2>/dev/null)
 if [ -z "$API_DATA" ] && [ -f "$CACHE_FILE" ]; then
   API_DATA=$(cat "$CACHE_FILE" 2>/dev/null)
   USING_CACHE=1
+  STALE_COUNT=$(cat "$STALE_FILE" 2>/dev/null || echo 0)
+  STALE_COUNT=$(( STALE_COUNT + 1 ))
+  echo "$STALE_COUNT" > "$STALE_FILE"
+else
+  STALE_COUNT=0
+fi
+
+# Debug: remaining retry-after time if in backoff
+RETRY_REMAINING=""
+if [ -f "$RETRY_FILE" ]; then
+  RETRY_TS=$(cat "$RETRY_FILE" 2>/dev/null)
+  NOW=$(date +%s)
+  if [ -n "$RETRY_TS" ] && [ "$NOW" -lt "$RETRY_TS" ] 2>/dev/null; then
+    SECS_LEFT=$(( RETRY_TS - NOW ))
+    MINS_LEFT=$(( SECS_LEFT / 60 ))
+    RETRY_REMAINING="${MINS_LEFT}m"
+  fi
 fi
 
 
@@ -180,7 +201,13 @@ if [ -n "$FIVE_PCT" ]; then
   elif [ "${FIVE_INT:-0}" -ge 50 ] 2>/dev/null; then BAR_COLOR="$C_WARN"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_WARN"
   else BAR_COLOR="$C_GOOD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_GOOD"
   fi
-  [ "${USING_CACHE:-0}" = "1" ] && LABEL="${LABEL} ·"
+  if [ "${USING_CACHE:-0}" = "1" ]; then
+    if [ "${STALE_COUNT:-0}" -ge 5 ] 2>/dev/null; then
+      LABEL="${LABEL} · err ${STALE_COUNT}t"
+    else
+      LABEL="${LABEL} ·"
+    fi
+  fi
 else
   FIVE_INT=0; BAR_COLOR="$C_DIM"; LABEL="Claude --"; LABEL_COLOR="$C_DIM"
 fi
@@ -297,7 +324,15 @@ fi
 
 echo "---"
 UPDATED_AT=$(stat -f "%Sm" -t "%H:%M:%S" "$CACHE_FILE" 2>/dev/null || echo "—")
-echo "  Updated $UPDATED_AT | font=Menlo size=11 color=$C_DIM refresh=true"
+ERR429_COUNT=$(cat "$ERR429_FILE" 2>/dev/null || echo 0)
+if [ "${ERR429_COUNT:-0}" -gt 0 ] 2>/dev/null; then
+  echo "  Updated ${UPDATED_AT}  (429×${ERR429_COUNT}) | font=Menlo size=11 color=$C_WARN refresh=true"
+else
+  echo "  Updated $UPDATED_AT | font=Menlo size=11 color=$C_DIM refresh=true"
+fi
+if [ -n "$RETRY_REMAINING" ]; then
+  echo "  ⚠ Rate limited — retry in ${RETRY_REMAINING} | font=Menlo size=11 color=$C_WARN refresh=true"
+fi
 
 # ── Refresh button (green) ──────────────────────────────────────────────
 PLUGIN_PATH_FULL="$(cd "$(dirname "$PLUGIN_PATH")" && pwd)/$(basename "$PLUGIN_PATH")"
