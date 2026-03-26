@@ -1,6 +1,6 @@
 #!/bin/bash
 # Claude Code Usage Bar — SwiftBar Plugin
-# Version: 1.2.0
+# Version: 1.3.0
 # Uses GET /api/oauth/usage directly — no hook or /tmp files required.
 # Updated: 2026-03-25
 # Repo: https://github.com/hohieuu/ai-usage-bar

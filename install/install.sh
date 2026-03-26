@@ -8,7 +8,7 @@ VERSION=""
 if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/../VERSION" ]; then
   VERSION=$(cat "$(dirname "${BASH_SOURCE[0]:-}")/../VERSION" 2>/dev/null | tr -d '[:space:]')
 fi
-VERSION="${VERSION:-1.2.0}"
+VERSION="${VERSION:-1.3.0}"
 REPO_RAW="https://raw.githubusercontent.com/hohieuu/ai-usage-bar/main"
 CACHE_DIR="$HOME/.claude-usage-bar"
 VERSION_FILE="$CACHE_DIR/installed_version"
