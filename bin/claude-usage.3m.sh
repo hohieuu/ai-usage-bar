@@ -196,10 +196,10 @@ SEVEN_TIME_PCT=$(time_pct "$SEVEN_RESETS" 168)
 # ── Pick bar color based on usage ─────────────────────────────────────────
 if [ -n "$FIVE_PCT" ]; then
   FIVE_INT=$(python3 -c "print(int(float('$FIVE_PCT')))" 2>/dev/null)
-  if   [ "${FIVE_INT:-0}" -ge 100 ] 2>/dev/null; then BAR_COLOR="#5500cc,#9966ff"; LABEL="Claude🧘100%"; LABEL_COLOR="#5500cc,#9966ff"
-  elif [ "${FIVE_INT:-0}" -ge 80 ] 2>/dev/null; then BAR_COLOR="$C_BAD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_BAD"
-  elif [ "${FIVE_INT:-0}" -ge 50 ] 2>/dev/null; then BAR_COLOR="$C_WARN"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_WARN"
-  else BAR_COLOR="$C_GOOD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_GOOD"
+  if   [ "${FIVE_INT:-0}" -ge 100 ] 2>/dev/null; then BAR_COLOR="#5500cc,#9966ff"; LABEL="Claude🧘100%"; LABEL_COLOR="#5500cc,#9966ff"; LABEL_COLOR_DARK="#9966ff"
+  elif [ "${FIVE_INT:-0}" -ge 80 ] 2>/dev/null; then BAR_COLOR="$C_BAD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_BAD"; LABEL_COLOR_DARK="$DARK_BAD"
+  elif [ "${FIVE_INT:-0}" -ge 50 ] 2>/dev/null; then BAR_COLOR="$C_WARN"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_WARN"; LABEL_COLOR_DARK="$DARK_WARN"
+  else BAR_COLOR="$C_GOOD"; LABEL="Claude ${FIVE_INT}%"; LABEL_COLOR="$C_GOOD"; LABEL_COLOR_DARK="$DARK_GOOD"
   fi
   if [ "${USING_CACHE:-0}" = "1" ]; then
     if [ "${STALE_COUNT:-0}" -ge 5 ] 2>/dev/null; then
@@ -209,7 +209,7 @@ if [ -n "$FIVE_PCT" ]; then
     fi
   fi
 else
-  FIVE_INT=0; BAR_COLOR="$C_DIM"; LABEL="Claude --"; LABEL_COLOR="$C_DIM"
+  FIVE_INT=0; BAR_COLOR="$C_DIM"; LABEL="Claude --"; LABEL_COLOR="$C_DIM"; LABEL_COLOR_DARK="$DARK_DIM"
 fi
 
 if [ -n "$SEVEN_PCT" ]; then
@@ -252,7 +252,7 @@ except: pass
 # ══════════════════════════════════════════════════════════════════════════
 # OUTPUT
 # ══════════════════════════════════════════════════════════════════════════
-echo "$LABEL | font=Menlo-Bold size=13 color=${LABEL_COLOR:-$BAR_COLOR}"
+echo "$LABEL | font=Menlo-Bold size=13 color=${LABEL_COLOR_DARK:-$DARK_DIM}"
 echo "---"
 
 # ── Header ─────────────────────────────────────────────────────────────────
@@ -334,7 +334,7 @@ if [ -n "$RETRY_REMAINING" ]; then
   echo "  ⚠ Rate limited — retry in ${RETRY_REMAINING} | font=Menlo size=11 color=$C_WARN refresh=true"
 fi
 
-# ── Refresh button (green) ──────────────────────────────────────────────
+# ── Refresh button ──────────────────────────────────────────────────────
 PLUGIN_PATH_FULL="$(cd "$(dirname "$PLUGIN_PATH")" && pwd)/$(basename "$PLUGIN_PATH")"
-echo "Refresh | bash=$PLUGIN_PATH_FULL param1=--force terminal=false refresh=true font=Menlo size=11 color=$C_GOOD"
-echo "Check for update | bash=$PLUGIN_PATH_FULL param1=--update terminal=true font=Menlo size=11 color=$C_INFO"
+echo "Refresh | bash=$PLUGIN_PATH_FULL param1=--force terminal=false refresh=true font=Menlo size=11"
+echo "Check for update | bash=$PLUGIN_PATH_FULL param1=--update terminal=true font=Menlo size=11"
