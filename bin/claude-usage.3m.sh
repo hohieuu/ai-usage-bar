@@ -255,12 +255,22 @@ except: pass
 echo "$LABEL | font=Menlo-Bold size=13 color=${LABEL_COLOR_DARK:-$DARK_DIM}"
 echo "---"
 
-# ── Header ─────────────────────────────────────────────────────────────────
-if [ "${USING_CACHE:-0}" = "1" ]; then
-  echo "Claude Usage | font=Menlo-Bold size=12 color=$C_DIM refresh=true"
+# ── Header — clickable row: title + updated time + refresh action ───────────
+UPDATED_AT=$(stat -f "%Sm" -t "%H:%M:%S" "$CACHE_FILE" 2>/dev/null || echo "—")
+ERR429_COUNT=$(cat "$ERR429_FILE" 2>/dev/null || echo 0)
+PLUGIN_PATH_FULL="$(cd "$(dirname "$PLUGIN_PATH")" && pwd)/$(basename "$PLUGIN_PATH")"
+
+if [ "${ERR429_COUNT:-0}" -gt 0 ] 2>/dev/null; then
+  HDR_LABEL="Claude Usage  ·  ${UPDATED_AT}  (429×${ERR429_COUNT})  [click to refresh]"
+  HDR_COLOR="$C_WARN"
+elif [ "${USING_CACHE:-0}" = "1" ]; then
+  HDR_LABEL="Claude Usage  ·  ${UPDATED_AT}  [click to refresh]"
+  HDR_COLOR="$C_DIM"
 else
-  echo "Claude Usage | font=Menlo-Bold size=12 color=$BAR_COLOR refresh=true"
+  HDR_LABEL="Claude Usage  ·  ${UPDATED_AT}  [click to refresh]"
+  HDR_COLOR="$BAR_COLOR"
 fi
+echo "$HDR_LABEL | font=Menlo-Bold size=12 color=$HDR_COLOR bash=$PLUGIN_PATH_FULL param1=--force terminal=false refresh=true"
 
 # ── 5h window ──────────────────────────────────────────────────────────────
 if [ -n "$FIVE_PCT" ] && [ -n "$FIVE_RESETS" ]; then
@@ -323,18 +333,7 @@ if [ -n "$SEVEN_PCT" ]; then
 fi
 
 echo "---"
-UPDATED_AT=$(stat -f "%Sm" -t "%H:%M:%S" "$CACHE_FILE" 2>/dev/null || echo "—")
-ERR429_COUNT=$(cat "$ERR429_FILE" 2>/dev/null || echo 0)
-if [ "${ERR429_COUNT:-0}" -gt 0 ] 2>/dev/null; then
-  echo "  Updated ${UPDATED_AT}  (429×${ERR429_COUNT}) | font=Menlo size=11 color=$C_WARN refresh=true"
-else
-  echo "  Updated $UPDATED_AT | font=Menlo size=11 color=$C_DIM refresh=true"
-fi
 if [ -n "$RETRY_REMAINING" ]; then
   echo "  ⚠ Rate limited — retry in ${RETRY_REMAINING} | font=Menlo size=11 color=$C_WARN refresh=true"
 fi
-
-# ── Refresh button ──────────────────────────────────────────────────────
-PLUGIN_PATH_FULL="$(cd "$(dirname "$PLUGIN_PATH")" && pwd)/$(basename "$PLUGIN_PATH")"
-echo "Refresh | bash=$PLUGIN_PATH_FULL param1=--force terminal=false refresh=true font=Menlo size=11"
 echo "Check for update | bash=$PLUGIN_PATH_FULL param1=--update terminal=true font=Menlo size=11"
