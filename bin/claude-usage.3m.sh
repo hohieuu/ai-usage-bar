@@ -63,10 +63,8 @@ fi
 fetch_usage() {
   [ -z "$TOKEN" ] && return 1
 
-  # Skip if cache is fresh and not a forced refresh
-  if [ "$FORCE_REFRESH" = "0" ] && [ "$CACHE_AGE" -lt 180 ] 2>/dev/null; then
-    return 1
-  fi
+  # Always attempt the API — cache is only a fallback for failures.
+  # Rate-limit protection is handled by RETRY_FILE (429 backoff).
 
   # Respect Retry-After if we were previously 429'd
   if [ -f "$RETRY_FILE" ]; then
