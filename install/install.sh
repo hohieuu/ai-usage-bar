@@ -93,6 +93,9 @@ fi
 # ── Clean up ALL existing claude-usage.* files/dirs ───────────────────────
 info "Cleaning up any existing claude-usage plugins..."
 find "$PLUGIN_DIR" -maxdepth 1 -name "claude-usage.*" -exec rm -rf {} + 2>/dev/null || true
+# Legacy: prior versions placed messages.json next to the plugin. It now lives
+# in $CACHE_DIR, so remove the old copy to keep the plugin dir to one file.
+rm -f "$PLUGIN_DIR/messages.json" 2>/dev/null || true
 # Clean up legacy hook if present
 if [ -f "$PLUGIN_DIR/claude-usage.5s.sh" ] || [ -f "$PLUGIN_DIR/claude-usage.60s.sh" ]; then
   IS_LEGACY_UPGRADE=1
@@ -127,8 +130,11 @@ fi
 chmod +x "$PLUGIN_DEST"
 success "Plugin installed → $PLUGIN_DEST"
 
-# ── Install messages file ──────────────────────────────────────────────────
-MESSAGES_DEST="$PLUGIN_DIR/messages.json"
+# ── Create cache directory ─────────────────────────────────────────────────
+mkdir -p "$CACHE_DIR"
+
+# ── Install messages file (in user data dir, not plugin dir) ───────────────
+MESSAGES_DEST="$CACHE_DIR/messages.json"
 if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]:-}")/../bin/messages.json" ]; then
   cp "$SCRIPT_DIR/messages.json" "$MESSAGES_DEST"
 else
@@ -136,8 +142,7 @@ else
 fi
 success "Messages installed → $MESSAGES_DEST"
 
-# ── Create cache directory & write version ─────────────────────────────────
-mkdir -p "$CACHE_DIR"
+# ── Write version ──────────────────────────────────────────────────────────
 echo "$VERSION" > "$VERSION_FILE"
 success "Version recorded → v${VERSION}"
 
